@@ -3,7 +3,7 @@
   2.   Inside `codes` folder, create a new folder named `Results`
   3.   Download sample data [here](https://drive.google.com/open?id=1jV0ys83MsN1dmdCw7VGMLH6WX7dHMRxU), extract and place those 3 folders inside `data` folder
   4.   Run `python train.py` to train the model. Model weights are saved at `../data/logs/kaggle_bowl/mask_rcnn.h5`. 
-  5.   Run `python predict.py` to predict images in `../test2` folder, generated mask are located in `codes/Results`.
+  5.   Run `python predict.py` to predict images in `..data//test2` folder, generated mask are located in `codes/Results`.
 
 # The 2018 Data Science Bowl: "Spot Nuclei. Speed Cures."
 
