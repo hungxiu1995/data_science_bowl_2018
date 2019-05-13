@@ -1,3 +1,10 @@
+## Getting Started
+  1.   Download pretrained weights [here](https://www.dropbox.com/s/1kql7tsug876xfn/kaggle_bowl.h5?dl=0), and place it inside `codes` folder
+  2.   Inside `codes` folder, create a new folder named `Results`
+  3.   Download sample data [here](https://drive.google.com/open?id=1jV0ys83MsN1dmdCw7VGMLH6WX7dHMRxU), extract and place those 3 folders inside `data` folder
+  4.   Run `python train.py` to train the model. Model weights are saved at `../data/logs/kaggle_bowl/mask_rcnn.h5`. 
+  5.   Run `python predict.py` to predict images in `../test2` folder, generated mask are located in `codes/Results`.
+
 # The 2018 Data Science Bowl: "Spot Nuclei. Speed Cures."
 
 This repository contains scripts of my solution to [The 2018 Data Science Bowl](https://www.kaggle.com/c/data-science-bowl-2018). Goal of the competition was to create an algorithm to automate nucleus detection from biomedical images.
