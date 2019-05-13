@@ -18,12 +18,14 @@ from skimage.measure import find_contours
 from skimage.measure import label
 from scipy.ndimage.morphology import binary_fill_holes
 from skimage.morphology import dilation, erosion
-
+import skimage
+import numpy as np
 
 import random
 import pandas as pd
 from metrics import mean_iou
 from tqdm import tqdm
+import datetime
 
 plt.switch_backend('agg')
 
@@ -370,7 +372,13 @@ def pred_n_plot_test(model, config, test_path='../data/stage2_test_final/', save
         image = dataset_test.load_image(image_id, color=config.IMAGE_COLOR)
 
         # Image name for submission rows.
-        image_id = dataset_test.image_info[image_id]['img_name']
+
+        # print(dataset_test.image_info[image_id])
+        # exit()
+
+        # image_id = dataset_test.image_info[image_id]['img_name']
+        image_id = dataset_test.image_info[image_id]['id'].split(".")[0]
+
         height, width = image.shape[:2]
 
         # result = ensemble_prediction(model, config, image)
@@ -418,6 +426,43 @@ def pred_n_plot_test(model, config, test_path='../data/stage2_test_final/', save
     print('No mask prediction for', no_masks, 'images')
 
 
+def color_splash(image, mask):
+    """Apply color splash effect.
+    image: RGB image [height, width, 3]
+    mask: instance segmentation mask [height, width, instance count]
+    Returns result image.
+    """
+    # Make a grayscale copy of the image. The grayscale copy still
+    # has 3 RGB channels, though.
+    gray = skimage.color.gray2rgb(skimage.color.rgb2gray(image)) * 255
+    # Copy color pixels from the original color image where mask is set
+    if mask.shape[-1] > 0:
+        # We're treating all instances as one, so collapse the mask into one layer
+        mask = (np.sum(mask, -1, keepdims=True) >= 1)
+        splash = np.where(mask, image, gray).astype(np.uint8)
+    else:
+        splash = gray.astype(np.uint8)
+    return splash
+
+
+def detect_and_color_splash(model, image_path=None, video_path=None):
+    assert image_path or video_path
+
+    # Image or video?
+    if image_path:
+        # Run model detection and generate the color splash effect
+        print("Running on {}".format(image_path))
+        # Read image
+        image = skimage.io.imread(image_path)
+        # Detect objects
+        r = model.detect([image], verbose=1)[0]
+        # Color splash
+        splash = color_splash(image, r['masks'])
+        # Save output
+        file_name = os.path.join("Results", image_path.split("/")[-1])
+        skimage.io.imsave(file_name, splash)
+
+
 if __name__ == '__main__':
 
     import time
@@ -431,39 +476,15 @@ if __name__ == '__main__':
     config.BATCH_SIZE = 1
     config.display()
 
-    # Predict using the last weights in training directory
-    model = get_model(config)
+    model = get_model(config, model_path='../data/logs/kaggle_bowl/mask_rcnn.h5')
+    # pred_n_plot_test(model, config, test_path='../data/stage1_test/', save_plots=True)
+    # pred_n_plot_test(model, config, test_path='../data/stage2_test_final/', save_plots=True)
 
-    # Predict using pre-trained weights
-    # model = get_model(config, model_path='../data/kaggle_bowl.h5')
-
-
-    # Ininitialize validation dataset
-    train_path = '../data/stage1_train/'
-    train_list, val_list = train_validation_split(
-        train_path, seed=11, test_size=0.1)
-    dataset_val = KaggleDataset()
-    dataset_val.load_shapes(val_list, train_path)
-    dataset_val.prepare()
-
-    # initialize stage 1  testing dataset
-    dataset_val = KaggleDataset()
-    val_path = '../data/stage1_test/'
-    val_list = os.listdir(val_path)
-    dataset_val.load_shapes(val_list, val_path)
-    dataset_val.prepare()
-    # Evaluate the model performance and plot boundaries for the predictions
-    eval_n_plot_val(model, config, dataset_val, save_plots=True)
-
-    # Predict and plot boundaries for stage1 test
-    pred_n_plot_test(model, config, test_path='../data/stage1_test/', save_plots=True)
-    # Predict and plot boundaries for stage2 test
-    pred_n_plot_test(model, config, test_path='../data/stage2_test_final/', save_plots=True)
-
-    # Save supercomputer log file locally
-    if 'PBS_JOBID' in os.environ.keys():
-        job_id = os.environ['PBS_JOBID'][:7]
-        fileList = list(filter(lambda x: job_id in x, os.listdir('./')))
-        os.rename(fileList[0], 'log.txt')
+    ls = os.listdir("../data/test2")
+    print(len(ls))
+    im_list = [os.path.join("../data/test2", f, "images", f + ".png") for f in ls]
+    for im in tqdm(im_list):
+        print(im)
+        detect_and_color_splash(model, image_path=im)
 
     print('Elapsed time', round((time.time() - start)/60, 1), 'minutes')

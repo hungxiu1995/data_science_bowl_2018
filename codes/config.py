@@ -181,6 +181,9 @@ class Config(object):
     def display(self):
         """Display Configuration values."""
         print("\nConfigurations:")
+        print("WTF")
+        # self.IMAGES_PER_GPU = 1
+
         for a in dir(self):
             if not a.startswith("__") and not callable(getattr(self, a)):
                 print("{:30} {}".format(a, getattr(self, a)))
@@ -210,7 +213,7 @@ class KaggleBowlConfig(Config):
 
     # Train on 1 GPU and 2 images per GPU.
     GPU_COUNT = 1
-    IMAGES_PER_GPU = 2
+    IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # background + nucleis
@@ -256,6 +259,9 @@ class KaggleBowlConfig(Config):
     # Threshold number for mask binarization, only used in inference mode
     DETECTION_MASK_THRESHOLD = 0.35
 
+    # --------------------------------------------------
+    IMAGE_MIN_SCALE = 0
+    IMAGE_RESIZE_MODE = "square"
 
 # Root directory of the project
 ROOT_DIR = '../data/'
@@ -267,7 +273,10 @@ MODEL_DIR = '../data/logs'
 def load_img(fname, color='RGB'):
 
     img = cv2.imread(fname)
-    img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
+    # print(fname)
+    # exit()
+
+    # img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
     if color == 'GRAY':
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB).astype(np.float32)
